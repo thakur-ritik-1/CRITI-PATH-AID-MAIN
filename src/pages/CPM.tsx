@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, CPMResult, TimeUnit } from '@/types/activity';
 import { ActivityTable } from '@/components/ActivityTable';
@@ -17,11 +17,11 @@ import {
   BarChart3, 
   Table, 
   Upload, 
-  Download, 
   FileSpreadsheet,
   AlertCircle,
   CheckCircle,
   Clock,
+  Play,
   ArrowLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -33,6 +33,7 @@ const CPM = () => {
   const [result, setResult] = useState<CPMResult | null>(null);
   const [timeUnit, setTimeUnit] = useState<TimeUnit>('days');
   const [activeTab, setActiveTab] = useState('input');
+  const networkContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCompute = () => {
     if (activities.length === 0) {
@@ -62,6 +63,7 @@ const CPM = () => {
     const sampleData = sample === 'simple' ? SAMPLE_SIMPLE : SAMPLE_PROJECT;
     setActivities(sampleData);
     setResult(null);
+    setActiveTab('input');
     toast.success(`Loaded ${sample} sample project`);
   };
 
@@ -76,6 +78,7 @@ const CPM = () => {
       if (parsed.length > 0) {
         setActivities(parsed);
         setResult(null);
+        setActiveTab('input');
         toast.success(`Imported ${parsed.length} activities`);
       } else {
         toast.error('Failed to parse CSV file');
@@ -109,268 +112,215 @@ const CPM = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Toaster position="top-right" />
-      
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
+    <div 
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url('https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`,
+      }}
+    >
+      {/* Overlay - Same as Landing Page */}
+      <div className="min-h-screen bg-background/80 backdrop-blur-sm">
+        
+        {/* Header - Same as Landing Page with Back Icon */}
+        <header className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/')}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">CPM Planner</h1>
-                <p className="text-muted-foreground mt-1">
-                  Critical Path Method Calculator & Visualizer
-                </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/')}
+                  className="h-10 w-10 rounded-full bg-gray-100/80 hover:bg-gray-200/80 transition-all duration-200"
+                >
+                  <ArrowLeft className="h-5 w-5 text-gray-700" />
+                </Button>
+                <Network className="h-8 w-8 text-blue-600" />
+                <span className="text-2xl font-bold text-foreground">Network Planner</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={() => handleLoadSample('simple')}>
-                Load Simple Sample
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleLoadSample('simple')}
+                className="bg-white/80 hover:bg-white border-gray-300"
+              >
+                Simple Sample
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleLoadSample('complex')}>
-                Load Complex Sample
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleLoadSample('complex')}
+                className="bg-white/80 hover:bg-white border-gray-300"
+              >
+                Complex Sample
               </Button>
-              <label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={handleImportCSV}
-                />
-                <Button variant="outline" size="sm" asChild>
-                  <span>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import CSV
-                  </span>
-                </Button>
-              </label>
             </div>
           </div>
+        </header>
+
+        {/* Page Title */}
+        <div className="container mx-auto px-4 text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-2">CPM Calculator</h1>
+          <p className="text-xl text-muted-foreground">
+            Critical Path Method Analysis & Visualization
+          </p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="input" className="gap-2">
-              <Table className="h-4 w-4" />
-              Input
-            </TabsTrigger>
-            <TabsTrigger value="results" className="gap-2" disabled={!result}>
-              <FileSpreadsheet className="h-4 w-4" />
-              Results
-            </TabsTrigger>
-            <TabsTrigger value="network" className="gap-2" disabled={!result}>
-              <Network className="h-4 w-4" />
-              Network
-            </TabsTrigger>
-            <TabsTrigger value="gantt" className="gap-2" disabled={!result}>
-              <BarChart3 className="h-4 w-4" />
-              Gantt
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-gray-100/80 backdrop-blur border border-gray-300">
+              <TabsTrigger value="input" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <Table className="h-4 w-4" />
+                Input
+              </TabsTrigger>
+              <TabsTrigger value="results" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm" disabled={!result}>
+                <FileSpreadsheet className="h-4 w-4" />
+                Results
+              </TabsTrigger>
+              <TabsTrigger value="network" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm" disabled={!result}>
+                <Network className="h-4 w-4" />
+                Network
+              </TabsTrigger>
+              <TabsTrigger value="gantt" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm" disabled={!result}>
+                <BarChart3 className="h-4 w-4" />
+                Gantt
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Input Tab */}
-          <TabsContent value="input" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Activities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ActivityTable activities={activities} onChange={setActivities} />
-                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleCompute} size="lg" className="gap-2">
-                    <Calculator className="h-5 w-5" />
-                    Compute CPM
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Input Tab */}
+            <TabsContent value="input" className="space-y-6">
+              <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-lg">
+                <CardHeader className="border-b border-gray-300 bg-white/50">
+                  <CardTitle className="flex items-center gap-3 text-gray-800">
+                    <Table className="h-6 w-6 text-gray-700" />
+                    Project Activities
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ActivityTable activities={activities} onChange={setActivities} />
+                  <div className="mt-6 flex justify-end gap-3">
+                    <label>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        className="hidden"
+                        onChange={handleImportCSV}
+                      />
+                      <Button variant="outline" className="bg-white/80 border-gray-300 hover:bg-white">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Import CSV
+                      </Button>
+                    </label>
+                    <Button onClick={handleCompute} size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg">
+                      <Play className="h-5 w-5" />
+                      Compute CPM
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-            {/* Instructions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>How to Use</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  1. <strong>Add activities</strong>: Enter unique IDs, names, durations, and predecessors for each activity.
-                </p>
-                <p>
-                  2. <strong>Define dependencies</strong>: List predecessor IDs separated by commas (e.g., "A, B").
-                </p>
-                <p>
-                  3. <strong>Compute CPM</strong>: Click the compute button to calculate ES, EF, LS, LF, and identify critical paths.
-                </p>
-                <p>
-                  4. <strong>Visualize</strong>: View results in table, network diagram, or Gantt chart format.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Results Tab */}
-          <TabsContent value="results" className="space-y-6">
-            {result && (
-              <>
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-primary/10">
-                          <Clock className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Project Duration</p>
-                          <p className="text-2xl font-bold">{result.projectDuration} {timeUnit}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-critical/10">
-                          <AlertCircle className="h-6 w-6 text-critical" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Critical Activities</p>
-                          <p className="text-2xl font-bold">
-                            {result.activities.filter(a => a.isCritical).length}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-success/10">
-                          <CheckCircle className="h-6 w-6 text-success" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Critical Paths</p>
-                          <p className="text-2xl font-bold">{result.criticalPaths.length}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Errors/Warnings */}
-                {result.errors && result.errors.length > 0 && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      <ul className="list-disc list-inside space-y-1">
-                        {result.errors.map((error, idx) => (
-                          <li key={idx}>{error}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {result.warnings && result.warnings.length > 0 && (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      <ul className="list-disc list-inside space-y-1">
-                        {result.warnings.map((warning, idx) => (
-                          <li key={idx}>{warning}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Critical Paths */}
-                {result.criticalPaths.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Critical Paths</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {result.criticalPaths.map((path, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground">
-                              Path {idx + 1}:
-                            </span>
-                            <div className="flex items-center gap-2">
-                              {path.map((id, i) => (
-                                <span key={i} className="flex items-center gap-2">
-                                  <span className="px-2 py-1 rounded bg-critical text-critical-foreground text-sm font-medium">
-                                    {id}
-                                  </span>
-                                  {i < path.length - 1 && (
-                                    <span className="text-muted-foreground">→</span>
-                                  )}
-                                </span>
-                              ))}
-                            </div>
+            {/* Results Tab */}
+            <TabsContent value="results" className="space-y-6">
+              {result && (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-lg">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-blue-100/80 border border-blue-200">
+                            <Clock className="h-6 w-6 text-blue-600" />
                           </div>
-                        ))}
-                      </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Project Duration</p>
+                            <p className="text-2xl font-bold text-gray-900">{result.projectDuration} {timeUnit}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-lg">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-red-100/80 border border-red-200">
+                            <AlertCircle className="h-6 w-6 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Critical Activities</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {result.activities.filter(a => a.isCritical).length}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-lg">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-green-100/80 border border-green-200">
+                            <CheckCircle className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Critical Paths</p>
+                            <p className="text-2xl font-bold text-gray-900">{result.criticalPaths.length}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Results Table */}
+                  <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-lg">
+                    <CardContent className="p-6">
+                      <ResultsTable activities={result.activities} onExport={handleExportCSV} />
                     </CardContent>
                   </Card>
-                )}
+                </>
+              )}
+            </TabsContent>
 
-                {/* Results Table */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <ResultsTable activities={result.activities} onExport={handleExportCSV} />
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </TabsContent>
+{/* Network Tab - Simple Version */}
+<TabsContent value="network">
+  <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-xl">
+    <CardHeader className="border-b border-gray-300 bg-white/50">
+      <CardTitle className="flex items-center gap-3 text-gray-800">
+        <Network className="h-6 w-6 text-gray-700" />
+        Network Diagram
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-6">
+      {result && (
+        <NetworkDiagram
+          activities={result.activities}
+          criticalPaths={result.criticalPaths}
+          aoaNetwork={result.aoaNetwork}
+        />
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>
 
-          {/* Network Tab */}
-          <TabsContent value="network">
-            <Card>
-              <CardHeader>
-                <CardTitle>Network Diagram</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {result && (
-                  <NetworkDiagram
-                    activities={result.activities}
-                    criticalPaths={result.criticalPaths}
-                    aoaNetwork={result.aoaNetwork}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Gantt Tab */}
-          <TabsContent value="gantt">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gantt Chart</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {result && <GanttChart activities={result.activities} />}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+            {/* Gantt Tab */}
+            <TabsContent value="gantt">
+              <Card className="bg-gray-50/90 backdrop-blur border border-gray-300 shadow-xl">
+                <CardHeader className="border-b border-gray-300 bg-white/50">
+                  <CardTitle className="flex items-center gap-3 text-gray-800">
+                    <BarChart3 className="h-6 w-6 text-gray-700" />
+                    Gantt Chart
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {result && <GanttChart activities={result.activities} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
     </div>
   );
 };
