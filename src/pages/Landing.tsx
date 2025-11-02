@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Calculator, Network, Clock, ArrowRight, Play } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 
 const Landing = () => {
@@ -150,6 +150,13 @@ const Landing = () => {
             </div>
           </div>
         </main>
+
+        {/* Footer */}
+        <footer className="text-center text-sm text-muted-foreground animate-in fade-in duration-700 delay-300 pb-8">
+          <p>
+            Developed as a Software Engineering Project by Tanish Singh, Ayushi Nahar, and Ritik Thakur
+          </p>
+        </footer>
       </div>
     </div>
   );
